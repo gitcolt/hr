@@ -7,10 +7,10 @@ void _hr_register_unload_hook();
 void _hr_register_update_hook();
 void _hr_register_hooks();
 
-extern void (*_hr_fptr_update)();
-extern void (*_hr_fptr_load)();
-extern void (*_hr_fptr_unload)();
-extern void (*_hr_fptr_close)();
+extern void (*_hr_fptr_update)(void *ctx);
+extern void (*_hr_fptr_load)(void *ctx);
+extern void (*_hr_fptr_unload)(void *ctx);
+extern void (*_hr_fptr_close)(void *ctx);
 
 #define HR_HOOK_UPDATE(fptr) \
 void _hr_register_hooks() { \
@@ -70,11 +70,16 @@ void hr_init(const char *watch_dir, const char *make_target);
 void hr_update();
 void hr_close();
 
-void (*_hr_fptr_update)();
-void (*_hr_fptr_load)();
-void (*_hr_fptr_unload)();
-void (*_hr_fptr_close)();
+void (*_hr_fptr_update)(void *ctx);
+void (*_hr_fptr_load)(void *ctx);
+void (*_hr_fptr_unload)(void *ctx);
+void (*_hr_fptr_close)(void *ctx);
 void (*_hr_fptr_register_hooks)();
+
+static void *_hr_ctx = NULL;
+
+#define HR_CTX(ctx) \
+    _hr_ctx = &ctx;
 
 void hr_watch_init(const char *watch_dir) {
     inotify_fd = inotify_init();
@@ -108,7 +113,7 @@ bool hr_check_modified() {
 }
 
 void hr_close() {
-    _hr_fptr_close();
+    _hr_fptr_close(_hr_ctx);
     dlclose(lib_handle);
 }
 
@@ -116,8 +121,8 @@ void hr_reload() {
     if (first_time)
         first_time = false;
     else {
-        _hr_fptr_unload();
-        hr_close();
+        _hr_fptr_unload(_hr_ctx);
+        hr_close(_hr_ctx);
     }
 
     char sys_cmd[99];
@@ -136,18 +141,18 @@ void hr_reload() {
         fprintf(stderr, "dlsym: %s\n", dlerror());
     _hr_fptr_register_hooks();
 
-    _hr_fptr_load();
+    _hr_fptr_load(_hr_ctx);
 }
 
 void hr_update() {
     if (hr_check_modified())
         hr_reload();
-    _hr_fptr_update();
+    _hr_fptr_update(_hr_ctx);
 }
 
 void hr_init(const char *watch_dir, const char *shared_lib) {
     shared_lib_str = shared_lib;
-    hr_reload();
+    hr_reload(_hr_ctx);
     hr_watch_init(watch_dir);
 }
 
