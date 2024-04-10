@@ -113,7 +113,8 @@ bool hr_check_modified() {
 }
 
 void hr_close() {
-    _hr_fptr_close(_hr_ctx);
+    if (_hr_fptr_close)
+        _hr_fptr_close(_hr_ctx);
     dlclose(lib_handle);
 }
 
@@ -121,7 +122,8 @@ void hr_reload() {
     if (first_time)
         first_time = false;
     else {
-        _hr_fptr_unload(_hr_ctx);
+        if (_hr_fptr_unload)
+            _hr_fptr_unload(_hr_ctx);
         hr_close(_hr_ctx);
     }
 
@@ -141,7 +143,8 @@ void hr_reload() {
         fprintf(stderr, "dlsym: %s\n", dlerror());
     _hr_fptr_register_hooks();
 
-    _hr_fptr_load(_hr_ctx);
+    if (_hr_fptr_load)
+        _hr_fptr_load(_hr_ctx);
 }
 
 void hr_update() {
