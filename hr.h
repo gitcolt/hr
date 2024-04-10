@@ -1,10 +1,6 @@
 #ifndef HOTRLD_H
 #define HOTRLD_H
 
-void hr_close();
-void hr_init(const char *watch_dir, const char *make_target);
-void hr_update();
-
 void _hr_register_load_hook();
 void _hr_register_close_hook();
 void _hr_register_unload_hook();
@@ -44,6 +40,10 @@ void _hr_register_close_hook() { \
 
 #endif // end HOTRLD_H
 
+/*
+ * =============================================================
+ */
+
 #ifdef HR_DRIVER
 
 #include <stdio.h>
@@ -66,10 +66,14 @@ static int inotify_fd;
 #define INOTIFY_EVENT_BUF_MAX (sizeof(struct inotify_event) + NAME_MAX + 1)
 static char inotify_event_buf[INOTIFY_EVENT_BUF_MAX];
 
-void (*_hr_fptr_load)();
-void (*_hr_fptr_close)();
-void (*_hr_fptr_unload)();
+void hr_init(const char *watch_dir, const char *make_target);
+void hr_update();
+void hr_close();
+
 void (*_hr_fptr_update)();
+void (*_hr_fptr_load)();
+void (*_hr_fptr_unload)();
+void (*_hr_fptr_close)();
 void (*_hr_fptr_register_hooks)();
 
 void hr_watch_init(const char *watch_dir) {
