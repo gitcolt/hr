@@ -101,12 +101,14 @@ bool hr_check_modified() {
     int len = read(inotify_fd, inotify_event_buf, INOTIFY_EVENT_BUF_MAX);
     if (len == -1 && errno == EAGAIN)
         return false;
+    const char *needles[] = { ".c", ".h" };
     int i = 0;
     while (i < len) {
         struct inotify_event *ev = (struct inotify_event *)&inotify_event_buf[i];
-        const char *needle = ".c";
-        if (strstr(ev->name, needle))
-            return true;
+        for (int j = 0; j < sizeof(needles)/sizeof(*needles); ++j) {
+            if (strstr(ev->name, needles[j]))
+                return true;
+        }
         i += sizeof(struct inotify_event) + ev->len;
     }
     return false;
