@@ -134,7 +134,13 @@ void hr_reload() {
     strcat(sys_cmd, shared_lib_str);
     system(sys_cmd);
     // https://unix.stackexchange.com/questions/607652/why-the-dynamic-linker-couldnt-resolve-reference-when-a-shared-library-has-a-de
-    lib_handle = dlopen(shared_lib_str, RTLD_NOW);
+    lib_handle = dlopen(shared_lib_str, RTLD_NOW | RTLD_DEEPBIND);
+    /*
+     * Setting the RTLD_DEEPBIND flag is the only way I've been able to get the linker
+     * to respect changes to the dlopen'ed library when using a source file in both the
+     * driver code and the module. I imagine there's a better way that doesn't require
+     * such a new version of glibc (2.3.4 2004!)
+     */
     if (!lib_handle) {
         fprintf(stderr, "dlopen: %s\n", dlerror());
         exit(EXIT_FAILURE);
